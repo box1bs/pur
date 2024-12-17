@@ -7,7 +7,6 @@ import (
 	"slices"
 
 	"github.com/google/uuid"
-	"github.com/gorilla/mux"
 )
 
 func WriteJSON(w http.ResponseWriter, status int, mess any) error {
@@ -16,9 +15,8 @@ func WriteJSON(w http.ResponseWriter, status int, mess any) error {
 	return json.NewEncoder(w).Encode(mess)
 }
 
-// Handle uuid from path
 func varsHandleUUID(r *http.Request, key string) (uuid.UUID, error) {
-	val := mux.Vars(r)[key]
+	val := r.PathValue(key)
 	id, err := uuid.Parse(val)
 	if err != nil {
 		log.Printf("failed parsing sended id: %v", err)

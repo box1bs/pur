@@ -12,7 +12,6 @@ import (
 	"github.com/box1bs/pur/pur_api/pkg/crawler"
 	"github.com/box1bs/pur/pur_api/pkg/model"
 	"github.com/box1bs/pur/pur_api/pkg/summarize"
-	"github.com/gorilla/mux"
 )
 
 type APIServer struct {
@@ -34,7 +33,7 @@ func NewAPIServer(listenAddr string, store config.Storage, accuracy, corcurrency
 }
 
 func (s *APIServer) Run() {
-	router := mux.NewRouter()
+	router := http.NewServeMux()
 
 	if err := s.Store.InitMigrate(); err != nil {
 		log.Fatalf("Failed to initialize store migration: %v", err)
@@ -46,7 +45,7 @@ func (s *APIServer) Run() {
 
 	log.Println("PUR API server running on port: ", s.ListenAddr)
 
-	http.ListenAndServe(s.ListenAddr, router)
+	http.ListenAndServe(":" + s.ListenAddr, router)
 }
 
 func (s *APIServer) HandleAccount(w http.ResponseWriter, r *http.Request) error {

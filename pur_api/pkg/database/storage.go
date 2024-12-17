@@ -22,7 +22,7 @@ func(p *Postgres) InitMigrate() error {
 }
 
 func(p *Postgres) CreateAccount(account model.Account) error {
-	if err := p.DB.Create(account).Error; err != nil {
+	if err := p.DB.Create(&account).Error; err != nil {
 		log.Printf("failed to create account: %v\n", err)
 		return err
 	}
@@ -50,7 +50,7 @@ func(p *Postgres) GetAccountByID(id uuid.UUID) (model.Account, error) {
 }
 
 func(p *Postgres) SaveLink(link model.Link) error {
-	if err := p.DB.Create(link).Error; err != nil {
+	if err := p.DB.Create(&link).Error; err != nil {
 		log.Printf("failed saving link: %v", err)
 		return err
 	}
@@ -59,7 +59,7 @@ func(p *Postgres) SaveLink(link model.Link) error {
 }
 
 func(p *Postgres) UpdateLink(updatedLink model.Link) error {
-	if err := p.DB.Save(updatedLink).Error; err != nil {
+	if err := p.DB.Save(&updatedLink).Error; err != nil {
 		log.Printf("failed updating link: %v", err)
 		return err
 	}
