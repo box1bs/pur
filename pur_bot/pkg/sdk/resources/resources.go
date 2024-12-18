@@ -21,7 +21,7 @@ type link struct {
 	Description string	`json:"description"`
 }
 
-func (rr *ReqResource) SaveLink(id uuid.UUID, description, url string) error {
+func (rr *ReqResource) SaveLink(id uuid.UUID, url, description string) error {
 	l := link{
 		Id: id.String(),
 		Url: url,
@@ -46,7 +46,7 @@ func (rr *ReqResource) SaveLink(id uuid.UUID, description, url string) error {
 	return nil
 }
 
-func (rr *ReqResource) GetAllLinks(id uuid.UUID) ([]link, error) {
+func (rr *ReqResource) GetAllLinks() ([]link, error) {
 	resp, err := rr.Client.Get(rr.Addr)
 	if err != nil {
 		return nil, err
@@ -93,4 +93,8 @@ func mapToLink(obj map[string]interface{}) link {
 		l.Description = description
 	}
 	return l
+}
+
+func (l *link) PresentLink() string{
+	return fmt.Sprintf("Your resource: %s,\ndescription: %s,\nsummary: %s\n", l.Url, l.Description, l.Summary)
 }

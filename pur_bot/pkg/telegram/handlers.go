@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/box1bs/pur/pur_bot/pkg/sdk/auth"
@@ -110,8 +111,27 @@ func (b *Bot) handleDeleteCommand(message *tgbotapi.Message) error {
 }
 
 func (b *Bot) handleShareCommand(message *tgbotapi.Message) error {
+	args := strings.TrimSpace(message.CommandArguments())
+
+	if args == "" {
+		msg := tgbotapi.NewMessage(message.Chat.ID, "Please type like:\n/shareLink <url> <description>")
+		b.bot.Send(msg)
+		return fmt.Errorf("empty args")
+	}
+
+	parts := strings.SplitN(args, " ", 2)
+	link, desc := parts[0], parts[1]
+
 	req := &resources.ReqResource{Addr: "http://localhost:8080/link", Client: &http.Client{Timeout: 200 * time.Millisecond}}
-	req = req
+
+	id, err := b.lc.GetSyncId(message.Chat.ID)
+	if err != nil {
+		return err
+	}
+
+	if err := req.SaveLink(id, link, desc); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -122,9 +142,21 @@ func (b *Bot) handleGetCommand(message *tgbotapi.Message) error {
 		return err
 	}
 	req := &resources.ReqResource{Addr: fmt.Sprintf("http://localhost:8080/link/%s", id), Client: &http.Client{Timeout: 200 * time.Millisecond}}
-	req = req
+	links, err := req.GetAllLinks()
+	if err != nil {
+		return err
+	}
 
-	return nil
+	var messageStr string
+
+	for _, link := range links {
+		messageStr += link.PresentLink()
+	}
+
+	msg := tgbotapi.NewMessage(message.Chat.ID, messageStr)
+	_, err = b.bot.Send(msg)
+
+	return err
 }
 
 func (b *Bot) handleUnknownCommand(message *tgbotapi.Message) error {
