@@ -1,0 +1,12 @@
+version: '4.6'
+services:
+  postgres:
+    image: postgres:17  # Укажите нужную версию PostgreSQL
+    container_name: pur_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres   # Имя пользователя
+      POSTGRES_PASSWORD: postgres # Пароль пользователя
+      POSTGRES_DB: pur_links      # Имя базы данных
+    ports:
+      - "3000:5432" # Проброс порта для подключения к PostgreSQL
