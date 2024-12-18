@@ -15,8 +15,8 @@ type RedisStorage struct {
 	ctx context.Context
 }
 
-func NewRedisStorage(dbNum int, addr, password string) *RedisStorage {
-	return &RedisStorage{
+func NewRedisStorage(dbNum int, addr, password string) (*RedisStorage, error) {
+	db := &RedisStorage{
 		rdb: redis.NewClient(&redis.Options{
 			Addr: addr,
 			Password: password,
@@ -24,6 +24,12 @@ func NewRedisStorage(dbNum int, addr, password string) *RedisStorage {
 		}),
 		ctx: context.Background(),
 	}
+
+	if err := db.rdb.Ping(db.ctx).Err(); err != nil {
+		return nil, err
+	}
+
+	return db, nil
 }
 
 func (rs *RedisStorage) SyncId(id int64) error {

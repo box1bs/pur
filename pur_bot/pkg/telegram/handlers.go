@@ -1,11 +1,13 @@
 package telegram
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"time"
 
 	"github.com/box1bs/pur/pur_bot/pkg/sdk/auth"
+	"github.com/box1bs/pur/pur_bot/pkg/sdk/resources"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
@@ -18,6 +20,10 @@ func(b *Bot) handleCommand(message *tgbotapi.Message) error {
 		return b.handleStartCommand(message)
 	case "delete":
 		return b.handleDeleteCommand(message)
+	case "shareLink":
+		return b.handleShareCommand(message)
+	case "getAllLinks":
+		return b.handleGetCommand(message)
 	default:
 		return b.handleUnknownCommand(message)
 	}
@@ -32,6 +38,9 @@ func(b *Bot) handleMessage(message *tgbotapi.Message) {
 }
 
 func (b *Bot) handleStartCommand(message *tgbotapi.Message) error {
+	if b.auth {
+		return nil
+	}
 	controlChan := make(chan error)
 	b.wg.Add(1)
 	go func() {
@@ -65,6 +74,7 @@ func (b *Bot) handleStartCommand(message *tgbotapi.Message) error {
             b.bot.Send(errorMsg)
             log.Println("Authorization error:", err)
         } else {
+			b.auth = true
             successMsg := tgbotapi.NewMessage(message.Chat.ID, "Вы успешно авторизовались!")
             b.bot.Send(successMsg)
         }
@@ -93,8 +103,28 @@ func (b *Bot) handleDeleteCommand(message *tgbotapi.Message) error {
 		return err
 	}
 
+	b.auth = false
+
 	_, err = b.bot.Send(msg)
 	return err
+}
+
+func (b *Bot) handleShareCommand(message *tgbotapi.Message) error {
+	req := &resources.ReqResource{Addr: "http://localhost:8080/link", Client: &http.Client{Timeout: 200 * time.Millisecond}}
+	req = req
+
+	return nil
+}
+
+func (b *Bot) handleGetCommand(message *tgbotapi.Message) error {
+	id, err := b.lc.GetSyncId(message.Chat.ID)
+	if err != nil {
+		return err
+	}
+	req := &resources.ReqResource{Addr: fmt.Sprintf("http://localhost:8080/link/%s", id), Client: &http.Client{Timeout: 200 * time.Millisecond}}
+	req = req
+
+	return nil
 }
 
 func (b *Bot) handleUnknownCommand(message *tgbotapi.Message) error {

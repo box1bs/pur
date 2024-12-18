@@ -40,7 +40,7 @@ func (s *APIServer) Run() {
 	}
 
 	router.HandleFunc("/account/{id}", makeHTTPHandleFunc(s.HandleAccount))
-	router.HandleFunc("/link/{id}", makeHTTPHandleFunc(s.HandleGetLinks))
+	router.HandleFunc("/link/{id}", makeHTTPHandleFunc(s.HandleLinkWithId))
 	router.HandleFunc("/link", makeHTTPHandleFunc(s.HandleLink))
 
 	log.Println("PUR API server running on port: ", s.ListenAddr)
@@ -167,7 +167,7 @@ func (s *APIServer) HandleSaveLink(w http.ResponseWriter, r *http.Request) error
 	if CanSummarize(Type) {
 		summary, err := summarize.NewSummarizeSender(link.Url, s.SummaryServAddr).Summarize()
 		if err != nil {
-			log.Printf("error summarize: %v, with type: %s", err, link.Url)
+			log.Printf("error summarize: %v, with type: %s", err, link.Type)
 		}
 
 		link.Summary = summary
