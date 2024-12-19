@@ -20,7 +20,7 @@ type Crawler struct {
 	ConcurrencyControl 	chan struct{}
 }
 
-func (c *Crawler) Crawl() (string, error) {
+func (c *Crawler) Crawl() (Type string, err error) {
 	t, err := getMimeType(c.BaseUrl, c.Client)
 	if err != nil {
 		return "", err
@@ -28,6 +28,14 @@ func (c *Crawler) Crawl() (string, error) {
 	if t != "html" {
 		return t, nil
 	}
+
+	defer func() {
+		if Type == "" && t != "" {
+			Type = t
+		} else {
+			Type = "unknown"
+		}
+	}()
 
 	links, err := c.extractLinks(c.BaseUrl)
 	if err != nil {

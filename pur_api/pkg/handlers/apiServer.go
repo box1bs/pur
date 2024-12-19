@@ -11,7 +11,7 @@ import (
 	"github.com/box1bs/pur/pur_api/pkg/config"
 	"github.com/box1bs/pur/pur_api/pkg/crawler"
 	"github.com/box1bs/pur/pur_api/pkg/model"
-	"github.com/box1bs/pur/pur_api/pkg/summarize"
+	_ "github.com/box1bs/pur/pur_api/pkg/summarize"
 )
 
 type APIServer struct {
@@ -111,6 +111,10 @@ func (s *APIServer) HandleDeleteAccount(w http.ResponseWriter, r *http.Request) 
 		return err
 	}
 
+	if err := s.Store.DeleteAllLinksById(accountId); err != nil {
+		return err
+	}
+
 	w.WriteHeader(http.StatusNoContent)
 
 	return nil
@@ -148,7 +152,7 @@ func (s *APIServer) HandleSaveLink(w http.ResponseWriter, r *http.Request) error
 
 	crawler := &crawler.Crawler{
 		Client: &http.Client{
-			Timeout: time.Second * 20,
+			Timeout: time.Second * 2,
 		},
 		Types: make(map[string]int),
 		Visited: make(map[string]string),
@@ -160,22 +164,23 @@ func (s *APIServer) HandleSaveLink(w http.ResponseWriter, r *http.Request) error
 	}
 
 	Type, err := crawler.Crawl()
-	if err != nil {
-		return err
+	if err != nil  {
+		log.Printf("error crawling link: %v", err)
 	}
 
-	if CanSummarize(Type) {
-		summary, err := summarize.NewSummarizeSender(link.Url, s.SummaryServAddr).Summarize()
-		if err != nil {
-			log.Printf("error summarize: %v, with type: %s", err, link.Type)
-		}
-
-		link.Summary = summary
-	}
+	//if CanSummarize(Type) {
+	//	summary, err := summarize.NewSummarizeSender(link.Url, s.SummaryServAddr).Summarize()
+	//	if err != nil {
+	//		log.Printf("error summarize: %v, with type: %s", err, link.Type)
+	//	}
+	//
+	//	link.Summary = summary
+	//}
 
 	link.Type = Type
 
 	if err := s.Store.SaveLink(link); err != nil {
+		log.Println(err)
 		return err
 	}
 
@@ -204,15 +209,18 @@ func (s *APIServer) HandleUpdateLink(w http.ResponseWriter, r *http.Request) err
 func (s *APIServer) HandleGetLinks(w http.ResponseWriter, r *http.Request) error {
 	accountId, err := varsHandleUUID(r, "id")
 	if err != nil {
+		log.Printf("error getting uuid from path: %v", err)
 		return err
 	}
 
 	links, err := s.Store.GetLinksByAccountID(accountId)
 	if err != nil {
+		log.Printf("error getting links by id: %v", err)
 		return err
 	}
 
 	if err := WriteJSON(w, 200, links); err != nil {
+		log.Printf("error sending json links: %v", err)
 		return err
 	}
 

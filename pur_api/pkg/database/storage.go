@@ -76,6 +76,15 @@ func(p *Postgres) DeleteLinkByID(id uuid.UUID) error {
 	return nil
 }
 
+func(p *Postgres) DeleteAllLinksById(id uuid.UUID) error {
+	if err := p.DB.Where("account_id = ?", id).Delete(&model.Link{}).Error; err != nil {
+		log.Printf("failed deleting links: %v", err)
+		return err
+	}
+
+	return nil
+}
+
 func(p *Postgres) GetLinksByAccountID(accountId uuid.UUID) ([]model.Link, error) {
 	var links []model.Link
 	if err := p.DB.Where("account_id = ?", accountId).Find(&links).Error; err != nil {

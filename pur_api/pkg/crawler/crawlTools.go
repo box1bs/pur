@@ -34,8 +34,10 @@ func getMimeType(url string, c *http.Client) (string, error) {
 	}
 	defer req.Body.Close()
 
-	if req.StatusCode > 399 {
-		return "", fmt.Errorf("invalid status code")
+	log.Printf("req body: %v", req.StatusCode)
+
+	if req.StatusCode > 399 && req.Header == nil {
+		return "", fmt.Errorf("invalid status code with empty headers")
 	}
 
 	contentTypes := req.Header["Content-Type"]

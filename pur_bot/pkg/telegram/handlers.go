@@ -40,6 +40,7 @@ func(b *Bot) handleMessage(message *tgbotapi.Message) {
 
 func (b *Bot) handleStartCommand(message *tgbotapi.Message) error {
 	if b.auth {
+		b.bot.Send(tgbotapi.NewMessage(message.Chat.ID, "u already signed"))
 		return nil
 	}
 	controlChan := make(chan error)
@@ -122,16 +123,20 @@ func (b *Bot) handleShareCommand(message *tgbotapi.Message) error {
 	parts := strings.SplitN(args, " ", 2)
 	link, desc := parts[0], parts[1]
 
-	req := &resources.ReqResource{Addr: "http://localhost:8080/link", Client: &http.Client{Timeout: 200 * time.Millisecond}}
+	req := &resources.ReqResource{Addr: "http://localhost:8080/link", Client: &http.Client{Timeout: 20 * time.Second}}
 
 	id, err := b.lc.GetSyncId(message.Chat.ID)
 	if err != nil {
+		log.Printf("error getting id from redis: %v", err)
 		return err
 	}
 
 	if err := req.SaveLink(id, link, desc); err != nil {
+		log.Printf("error saving link: %v", err)
 		return err
 	}
+
+	b.bot.Send(tgbotapi.NewMessage(message.Chat.ID, "Saved"))
 
 	return nil
 }
@@ -144,19 +149,16 @@ func (b *Bot) handleGetCommand(message *tgbotapi.Message) error {
 	req := &resources.ReqResource{Addr: fmt.Sprintf("http://localhost:8080/link/%s", id), Client: &http.Client{Timeout: 200 * time.Millisecond}}
 	links, err := req.GetAllLinks()
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 
-	var messageStr string
-
 	for _, link := range links {
-		messageStr += link.PresentLink()
+		msg := tgbotapi.NewMessage(message.Chat.ID, link.PresentLink())
+		b.bot.Send(msg)
 	}
 
-	msg := tgbotapi.NewMessage(message.Chat.ID, messageStr)
-	_, err = b.bot.Send(msg)
-
-	return err
+	return nil
 }
 
 func (b *Bot) handleUnknownCommand(message *tgbotapi.Message) error {

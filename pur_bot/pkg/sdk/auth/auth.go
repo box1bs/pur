@@ -31,6 +31,10 @@ func (a *AccountData) Authorizate() error {
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode == 200 {
+		return nil
+	}
+
 	if resp.StatusCode != http.StatusCreated {
 		return fmt.Errorf("invalid status code: %d", resp.StatusCode)
 	}

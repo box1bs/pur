@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -49,12 +50,14 @@ func (rr *ReqResource) SaveLink(id uuid.UUID, url, description string) error {
 func (rr *ReqResource) GetAllLinks() ([]link, error) {
 	resp, err := rr.Client.Get(rr.Addr)
 	if err != nil {
+		log.Printf("error getting links: %v", err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 
 	var sendedData interface{}
 	if err := json.NewDecoder(resp.Body).Decode(&sendedData); err != nil {
+		log.Printf("error decode links: %v", err)
 		return nil, err
 	}
 
@@ -96,5 +99,8 @@ func mapToLink(obj map[string]interface{}) link {
 }
 
 func (l *link) PresentLink() string{
-	return fmt.Sprintf("Your resource: %s,\ndescription: %s,\nsummary: %s\n", l.Url, l.Description, l.Summary)
+	if l.Summary != "" {
+		return fmt.Sprintf("Your resource: %s,\ndescription: %s,\nsummary: %s\n", l.Url, l.Description, l.Summary)
+	}
+	return fmt.Sprintf("Your resource: %s,\ndescription: %s\n", l.Url, l.Description)
 }
