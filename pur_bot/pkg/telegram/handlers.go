@@ -9,21 +9,20 @@ import (
 
 	"github.com/box1bs/pur/pur_bot/pkg/sdk/auth"
 	"github.com/box1bs/pur/pur_bot/pkg/sdk/resources"
+	"github.com/box1bs/pur/pur_bot/pkg/telegram/messanges"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
-
-const commandStart = "start"
 
 func(b *Bot) handleCommand(message *tgbotapi.Message) error {
 
 	switch message.Command() {
-	case commandStart:
+	case messanges.Start:
 		return b.handleStartCommand(message)
-	case "delete":
+	case messanges.Del:
 		return b.handleDeleteCommand(message)
-	case "shareLink":
+	case messanges.Save:
 		return b.handleShareCommand(message)
-	case "getAllLinks":
+	case messanges.Get:
 		return b.handleGetCommand(message)
 	default:
 		return b.handleUnknownCommand(message)
@@ -40,7 +39,7 @@ func(b *Bot) handleMessage(message *tgbotapi.Message) {
 
 func (b *Bot) handleStartCommand(message *tgbotapi.Message) error {
 	if b.auth {
-		b.bot.Send(tgbotapi.NewMessage(message.Chat.ID, "u already signed"))
+		b.bot.Send(tgbotapi.NewMessage(message.Chat.ID, messanges.GetWelcomeMessange()))
 		return nil
 	}
 	controlChan := make(chan error)
@@ -72,12 +71,10 @@ func (b *Bot) handleStartCommand(message *tgbotapi.Message) error {
 	go func() {
 		defer b.wg.Done()
         if err := <-controlChan; err != nil {
-            errorMsg := tgbotapi.NewMessage(message.Chat.ID, "Ошибка авторизации")
-            b.bot.Send(errorMsg)
             log.Println("Authorization error:", err)
         } else {
 			b.auth = true
-            successMsg := tgbotapi.NewMessage(message.Chat.ID, "Вы успешно авторизовались!")
+            successMsg := tgbotapi.NewMessage(message.Chat.ID, messanges.GetWelcomeMessange())
             b.bot.Send(successMsg)
         }
     }()
@@ -88,7 +85,7 @@ func (b *Bot) handleStartCommand(message *tgbotapi.Message) error {
 }
 
 func (b *Bot) handleDeleteCommand(message *tgbotapi.Message) error {
-	msg := tgbotapi.NewMessage(message.Chat.ID, "data deleted")
+	msg := tgbotapi.NewMessage(message.Chat.ID, "Success")
 	uid, err := b.lc.GetSyncId(message.Chat.ID)
 	if err != nil {
 		return err
@@ -115,7 +112,7 @@ func (b *Bot) handleShareCommand(message *tgbotapi.Message) error {
 	args := strings.TrimSpace(message.CommandArguments())
 
 	if args == "" {
-		msg := tgbotapi.NewMessage(message.Chat.ID, "Please type like:\n/shareLink <url> <description>")
+		msg := tgbotapi.NewMessage(message.Chat.ID, "Please type like:\n/share_link <url> <description>")
 		b.bot.Send(msg)
 		return fmt.Errorf("empty args")
 	}

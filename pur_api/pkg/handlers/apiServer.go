@@ -12,6 +12,7 @@ import (
 	"github.com/box1bs/pur/pur_api/pkg/crawler"
 	"github.com/box1bs/pur/pur_api/pkg/model"
 	_ "github.com/box1bs/pur/pur_api/pkg/summarize"
+	"github.com/go-co-op/gocron"
 )
 
 type APIServer struct {
@@ -44,6 +45,19 @@ func (s *APIServer) Run() {
 	router.HandleFunc("/link", makeHTTPHandleFunc(s.HandleLink))
 
 	log.Println("PUR API server running on port: ", s.ListenAddr)
+
+	sc := gocron.NewScheduler(time.UTC)
+
+	sc.Every(1).Day().Do(func() {
+		err := s.Store.DeleteObsoleteRecords()
+		if err != nil {
+			log.Println("error del obsolete records:", err)
+		} else {
+			log.Println("obsolete records successfuly deleted.")
+		}
+	})
+
+	go sc.StartBlocking()
 
 	http.ListenAndServe(":" + s.ListenAddr, router)
 }

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 )
 
@@ -34,14 +33,9 @@ func (s *SummarizeSender) Summarize() (string, error) {
 	}
 	defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", fmt.Errorf("error reading response: %v", err)
-	}
-
 	var response map[string]interface{}
-	if err := json.Unmarshal(body, &response); err != nil {
-		return "", fmt.Errorf("error unmarshalling JSON: %v", err)
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return "", fmt.Errorf("error decoding JSON: %v", err)
 	}
 
 	if errMsg, exists := response["error"].(string); exists {

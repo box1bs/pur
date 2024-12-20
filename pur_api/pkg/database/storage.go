@@ -2,6 +2,7 @@ package database
 
 import (
 	"log"
+	"time"
 
 	"github.com/box1bs/pur/pur_api/pkg/model"
 	"github.com/google/uuid"
@@ -19,6 +20,11 @@ func(p *Postgres) InitMigrate() error {
 	}
 	
 	return nil
+}
+
+func(p *Postgres) DeleteObsoleteRecords() error {
+	tresholdDate := time.Now().Add(-30 * 24 * time.Hour)
+	return p.DB.Where("created_at < ?", tresholdDate).Delete(&model.Link{}).Error
 }
 
 func(p *Postgres) CreateAccount(account model.Account) error {

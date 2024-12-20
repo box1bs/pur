@@ -33,6 +33,17 @@ func NewBot(bot *tgbotapi.BotAPI) *Bot {
 
 func (b *Bot) Start() error {
 	log.Printf("Authorized on account %s", b.bot.Self.UserName)
+	
+	commands := []tgbotapi.BotCommand{
+		{Command: "start", Description: "start work with bot"},
+		{Command: "share_link", Description: "save your link for a while for you"},
+		{Command: "get_all_links", Description: "print out all your save links"},
+	}
+	
+	setCommandConf := tgbotapi.NewSetMyCommands(commands...)
+	if _, err := b.bot.Request(setCommandConf); err != nil {
+		return err
+	}
 
 	b.handleUpdates()
 
