@@ -5,6 +5,7 @@ import "fmt"
 const Start = "start"
 const Save = "share_link"
 const Get = "get_all_links"
+const DeleteLink = "delete_link"
 const Del = "delete"
 
 func GetWelcomeMessange() string {

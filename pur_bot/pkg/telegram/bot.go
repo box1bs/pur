@@ -38,6 +38,7 @@ func (b *Bot) Start() error {
 		{Command: "start", Description: "start work with bot"},
 		{Command: "share_link", Description: "save your link for a while for you"},
 		{Command: "get_all_links", Description: "print out all your save links"},
+		{Command: "delete_link", Description: "delete saved link by it's url"},
 	}
 	
 	setCommandConf := tgbotapi.NewSetMyCommands(commands...)

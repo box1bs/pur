@@ -150,7 +150,7 @@ func (s *APIServer) HandleLinkWithId(w http.ResponseWriter, r *http.Request) err
 	case "GET":
 		return s.HandleGetLinks(w, r)
 	case "DELETE":
-		return s.HandleDeleteLink(w, r)
+		return s.HandleDeleteLinkByUrl(w, r)
 	}
 
 	return fmt.Errorf("method not allowed: %s", r.Method)
@@ -166,7 +166,7 @@ func (s *APIServer) HandleSaveLink(w http.ResponseWriter, r *http.Request) error
 
 	crawler := &crawler.Crawler{
 		Client: &http.Client{
-			Timeout: time.Second * 2,
+			Timeout: time.Millisecond * 200,
 		},
 		Types: make(map[string]int),
 		Visited: make(map[string]string),
@@ -219,7 +219,6 @@ func (s *APIServer) HandleUpdateLink(w http.ResponseWriter, r *http.Request) err
 	return nil
 }
 
-//Use account Id for getting array of links
 func (s *APIServer) HandleGetLinks(w http.ResponseWriter, r *http.Request) error {
 	accountId, err := varsHandleUUID(r, "id")
 	if err != nil {
@@ -250,6 +249,30 @@ func (s *APIServer) HandleDeleteLink(w http.ResponseWriter, r *http.Request) err
 
 	if err := s.Store.DeleteLinkByID(linkId); err != nil {
 		return err
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+
+	return nil
+}
+
+func (s *APIServer) HandleDeleteLinkByUrl(w http.ResponseWriter, r *http.Request) error {
+	uid, err := varsHandleUUID(r, "id")
+	if err != nil {
+		return err
+	}
+
+	var resp map[string]interface{}
+	if err := json.NewDecoder(r.Body).Decode(&resp); err != nil {
+		return err
+	}
+
+	if url, ok := resp["url"].(string); ok {
+		if err := s.Store.DeleteRecordByUrl(uid, url); err != nil {
+			return err
+		}
+	} else {
+		return fmt.Errorf("invalid request body")
 	}
 
 	w.WriteHeader(http.StatusNoContent)

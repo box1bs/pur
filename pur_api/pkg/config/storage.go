@@ -14,6 +14,7 @@ type Storage interface {
 
 	SaveLink(model.Link) error
 	UpdateLink(model.Link) error
+	DeleteRecordByUrl(uuid.UUID, string) error
 	DeleteObsoleteRecords() error
 	DeleteAllLinksById(uuid.UUID) error
 	DeleteLinkByID(uuid.UUID) error

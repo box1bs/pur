@@ -20,6 +20,8 @@ func(b *Bot) handleCommand(message *tgbotapi.Message) error {
 		return b.handleStartCommand(message)
 	case messanges.Del:
 		return b.handleDeleteCommand(message)
+	case messanges.DeleteLink:
+		return b.HandleDeleteLinkCommand(message)
 	case messanges.Save:
 		return b.handleShareCommand(message)
 	case messanges.Get:
@@ -95,7 +97,7 @@ func (b *Bot) handleDeleteCommand(message *tgbotapi.Message) error {
 		Name: message.From.UserName,
 		Id: uid,
 		Client: &http.Client{
-			Timeout: time.Second * 10,
+			Timeout: time.Second * 1,
 		},
 	}
 	if err := user.DeleteAccount(); err != nil {
@@ -106,6 +108,28 @@ func (b *Bot) handleDeleteCommand(message *tgbotapi.Message) error {
 
 	_, err = b.bot.Send(msg)
 	return err
+}
+
+func (b *Bot) HandleDeleteLinkCommand(message *tgbotapi.Message) error {
+	url := strings.TrimSpace(message.CommandArguments())
+	if url == "" {
+		msg := tgbotapi.NewMessage(message.Chat.ID, "Please type like:\n/delete_link <url>")
+		b.bot.Send(msg)
+		return fmt.Errorf("empty args")
+	}
+
+	uid, err := b.lc.GetSyncId(message.Chat.ID)
+	if err != nil {
+		return err
+	}
+
+	req := &resources.ReqResource{Addr: fmt.Sprintf("http://localhost:8080/link/%s", uid.String()), Client: &http.Client{Timeout: 200 * time.Millisecond}}
+	if err := req.DeleteLink(); err != nil {
+		return err
+	}
+
+	b.bot.Send(tgbotapi.NewMessage(message.Chat.ID, "link successfully deleted"))
+	return nil
 }
 
 func (b *Bot) handleShareCommand(message *tgbotapi.Message) error {
@@ -120,7 +144,7 @@ func (b *Bot) handleShareCommand(message *tgbotapi.Message) error {
 	parts := strings.SplitN(args, " ", 2)
 	link, desc := parts[0], parts[1]
 
-	req := &resources.ReqResource{Addr: "http://localhost:8080/link", Client: &http.Client{Timeout: 20 * time.Second}}
+	req := &resources.ReqResource{Addr: "http://localhost:8080/link", Client: &http.Client{Timeout: 2 * time.Second}}
 
 	id, err := b.lc.GetSyncId(message.Chat.ID)
 	if err != nil {
@@ -143,7 +167,7 @@ func (b *Bot) handleGetCommand(message *tgbotapi.Message) error {
 	if err != nil {
 		return err
 	}
-	req := &resources.ReqResource{Addr: fmt.Sprintf("http://localhost:8080/link/%s", id), Client: &http.Client{Timeout: 200 * time.Millisecond}}
+	req := &resources.ReqResource{Addr: fmt.Sprintf("http://localhost:8080/link/%s", id.String()), Client: &http.Client{Timeout: 200 * time.Millisecond}}
 	links, err := req.GetAllLinks()
 	if err != nil {
 		log.Println(err)

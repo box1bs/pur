@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 
 	"github.com/google/uuid"
 )
@@ -41,6 +42,27 @@ func (rr *ReqResource) SaveLink(id uuid.UUID, url, description string) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusCreated {
+		return fmt.Errorf("invalid status code: %d", resp.StatusCode)
+	}
+
+	return nil
+}
+
+func (rr *ReqResource) DeleteLink() error {
+	uri, err := url.Parse(rr.Addr)
+	if err != nil {
+		return err
+	}
+
+	resp, err := rr.Client.Do(&http.Request{
+		Method: http.MethodDelete,
+		URL: uri,
+	})
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != http.StatusNoContent {
 		return fmt.Errorf("invalid status code: %d", resp.StatusCode)
 	}
 
