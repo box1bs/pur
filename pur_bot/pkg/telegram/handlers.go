@@ -124,7 +124,8 @@ func (b *Bot) HandleDeleteLinkCommand(message *tgbotapi.Message) error {
 	}
 
 	req := &resources.ReqResource{Addr: fmt.Sprintf("http://localhost:8080/link/%s", uid.String()), Client: &http.Client{Timeout: 200 * time.Millisecond}}
-	if err := req.DeleteLink(); err != nil {
+	if err := req.DeleteLink(url); err != nil {
+		log.Printf("error deleting link: %v", err)
 		return err
 	}
 
@@ -144,7 +145,7 @@ func (b *Bot) handleShareCommand(message *tgbotapi.Message) error {
 	parts := strings.SplitN(args, " ", 2)
 	link, desc := parts[0], parts[1]
 
-	req := &resources.ReqResource{Addr: "http://localhost:8080/link", Client: &http.Client{Timeout: 2 * time.Second}}
+	req := &resources.ReqResource{Addr: "http://localhost:8080/link", Client: &http.Client{Timeout: 5 * time.Second}}
 
 	id, err := b.lc.GetSyncId(message.Chat.ID)
 	if err != nil {
@@ -154,6 +155,7 @@ func (b *Bot) handleShareCommand(message *tgbotapi.Message) error {
 
 	if err := req.SaveLink(id, link, desc); err != nil {
 		log.Printf("error saving link: %v", err)
+		b.bot.Send(tgbotapi.NewMessage(message.Chat.ID, "something went wrong"))
 		return err
 	}
 
@@ -167,7 +169,7 @@ func (b *Bot) handleGetCommand(message *tgbotapi.Message) error {
 	if err != nil {
 		return err
 	}
-	req := &resources.ReqResource{Addr: fmt.Sprintf("http://localhost:8080/link/%s", id.String()), Client: &http.Client{Timeout: 200 * time.Millisecond}}
+	req := &resources.ReqResource{Addr: fmt.Sprintf("http://localhost:8080/link/%s", id.String()), Client: &http.Client{Timeout: 500 * time.Millisecond}}
 	links, err := req.GetAllLinks()
 	if err != nil {
 		log.Println(err)

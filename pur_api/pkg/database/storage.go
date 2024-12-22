@@ -84,6 +84,7 @@ func(p *Postgres) DeleteLinkByID(id uuid.UUID) error {
 
 func(p *Postgres) DeleteRecordByUrl(id uuid.UUID, URL string) error {
 	if err := p.DB.Where("account_id = ? AND url = ?", id, URL).Delete(&model.Link{}).Error; err != nil {
+		log.Printf("error deleting link: %v", err)
 		return err
 	}
 

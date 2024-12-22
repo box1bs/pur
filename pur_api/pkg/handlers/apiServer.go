@@ -166,7 +166,7 @@ func (s *APIServer) HandleSaveLink(w http.ResponseWriter, r *http.Request) error
 
 	crawler := &crawler.Crawler{
 		Client: &http.Client{
-			Timeout: time.Millisecond * 200,
+			Timeout: time.Millisecond * 1000,
 		},
 		Types: make(map[string]int),
 		Visited: make(map[string]string),
@@ -177,15 +177,18 @@ func (s *APIServer) HandleSaveLink(w http.ResponseWriter, r *http.Request) error
 		ConcurrencyControl: make(chan struct{}, s.CorcurrencyCount),
 	}
 
+	
 	Type, err := crawler.Crawl()
 	if err != nil  {
 		log.Printf("error crawling link: %v", err)
 	}
+	
+	log.Println(Type)
 
 	if CanSummarize(Type) {
 		summary, err := summarize.NewSummarizeSender(link.Url, s.SummaryServAddr).Summarize()
 		if err != nil {
-			log.Printf("error summarize: %v, with type: %s", err, link.Type)
+			log.Printf("error summarize: %v, with type: %s", err, Type)
 		}
 	
 		link.Summary = summary
@@ -259,16 +262,19 @@ func (s *APIServer) HandleDeleteLink(w http.ResponseWriter, r *http.Request) err
 func (s *APIServer) HandleDeleteLinkByUrl(w http.ResponseWriter, r *http.Request) error {
 	uid, err := varsHandleUUID(r, "id")
 	if err != nil {
+		log.Printf("error handling id: %v", err)
 		return err
 	}
 
 	var resp map[string]interface{}
 	if err := json.NewDecoder(r.Body).Decode(&resp); err != nil {
+		log.Printf("error decode response: %v", err)
 		return err
 	}
 
 	if url, ok := resp["url"].(string); ok {
 		if err := s.Store.DeleteRecordByUrl(uid, url); err != nil {
+			log.Printf("error deleting link: %v", err)
 			return err
 		}
 	} else {

@@ -40,5 +40,5 @@ func makeHTTPHandleFunc(f apiFunc) http.HandlerFunc {
 }
 
 func CanSummarize(Type string) bool {
-	return slices.Contains([]string{"article", "website", "book", "document", "event"}, Type) //constant types 
+	return slices.Contains([]string{"article", "html", "website", "book", "document", "event"}, Type) //constant types 
 }

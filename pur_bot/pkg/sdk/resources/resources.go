@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"net/url"
 
 	"github.com/google/uuid"
 )
@@ -48,16 +47,22 @@ func (rr *ReqResource) SaveLink(id uuid.UUID, url, description string) error {
 	return nil
 }
 
-func (rr *ReqResource) DeleteLink() error {
-	uri, err := url.Parse(rr.Addr)
+func (rr *ReqResource) DeleteLink(Url string) error {
+	reqBody, err := json.Marshal(map[string]string{
+		"url": Url,
+	})
 	if err != nil {
 		return err
 	}
 
-	resp, err := rr.Client.Do(&http.Request{
-		Method: http.MethodDelete,
-		URL: uri,
-	})
+	req, err := http.NewRequest(http.MethodDelete, rr.Addr, bytes.NewBuffer(reqBody))
+	if err != nil {
+		log.Fatalf("Error creating request: %v", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := rr.Client.Do(req)
 	if err != nil {
 		return err
 	}
