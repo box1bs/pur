@@ -24,7 +24,7 @@ func(p *Postgres) InitMigrate() error {
 
 func(p *Postgres) DeleteObsoleteRecords() error {
 	tresholdDate := time.Now().Add(-30 * 24 * time.Hour)
-	return p.DB.Where("created_at < ?", tresholdDate).Delete(&model.Link{}).Error
+	return p.DB.Where("saved_at < ?", tresholdDate).Delete(&model.Link{}).Error
 }
 
 func(p *Postgres) CreateAccount(account model.Account) error {

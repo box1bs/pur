@@ -11,7 +11,7 @@ import (
 	"github.com/box1bs/pur/pur_api/pkg/config"
 	"github.com/box1bs/pur/pur_api/pkg/crawler"
 	"github.com/box1bs/pur/pur_api/pkg/model"
-	_ "github.com/box1bs/pur/pur_api/pkg/summarize"
+	"github.com/box1bs/pur/pur_api/pkg/summarize"
 	"github.com/go-co-op/gocron"
 )
 
@@ -182,14 +182,14 @@ func (s *APIServer) HandleSaveLink(w http.ResponseWriter, r *http.Request) error
 		log.Printf("error crawling link: %v", err)
 	}
 
-	//if CanSummarize(Type) {
-	//	summary, err := summarize.NewSummarizeSender(link.Url, s.SummaryServAddr).Summarize()
-	//	if err != nil {
-	//		log.Printf("error summarize: %v, with type: %s", err, link.Type)
-	//	}
-	//
-	//	link.Summary = summary
-	//}
+	if CanSummarize(Type) {
+		summary, err := summarize.NewSummarizeSender(link.Url, s.SummaryServAddr).Summarize()
+		if err != nil {
+			log.Printf("error summarize: %v, with type: %s", err, link.Type)
+		}
+	
+		link.Summary = summary
+	}
 
 	link.Type = Type
 
